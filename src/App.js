@@ -1,40 +1,53 @@
-import { useState } from "react";
-import axios from "axios";
+import {
+  AreaChart,
+  Area,
+  CartesianGrid,
+  YAxis,
+  XAxis,
+  Tooltip,
+} from "recharts";
+import { useState, useEffect } from "react";
+import { getWeather } from "./axios.js";
 
 function App() {
   const [nameCity, setNameCity] = useState("");
-  const [coord, setCoord] = useState("");
 
   async function findCity(e) {
     e.preventDefault();
-    const weather = await axios.get(
-      "https://api.openweathermap.org/data/2.5/weather",
-      {
-        params: {
-          q: nameCity,
-          appid: "94f0682e42c7aabe667957f6e85d502b",
-          units: "metric",
-          lang: "ru",
-        },
-      }
-    );
 
-    console.log(weather.data);
+    getWeather({
+      q: nameCity,
+    }).then(data => console.log(data));
   }
 
-  function geo() {
+  useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(position => {
-        setCoord(
-          `Широта ${position.coords.latitude}, Долгота ${position.coords.longitude}`
-        );
+        getWeather({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        }).then(data => console.log(data));
       });
     }
+  }, []);
+
+  function renderTooltip(e) {
+    const { payload, label } = e;
+
+    return (
+      <div>
+        <p>{label}</p>
+        <ul>
+          {payload.map((value, index) => (
+            <li key={index}>Температура: {value.value}</li>
+          ))}
+        </ul>
+      </div>
+    );
   }
 
   return (
     <div className="App">
-      <button onClick={geo}>Геолокация</button>
       <form onSubmit={e => findCity(e)}>
         <input
           type="text"
@@ -44,7 +57,36 @@ function App() {
         />
         <button type="submit">Найти</button>
       </form>
-      <h1>{coord}</h1>
+      <AreaChart
+        width={1000}
+        height={300}
+        data={[
+          { name: "a", temp: 10 },
+          { name: "b", temp: 18 },
+          { name: "c", temp: 20 },
+          { name: "d", temp: 5 },
+          { name: "e", temp: 12 },
+          { name: "f", temp: 26 },
+          { name: "j", temp: 18 },
+        ]}
+      >
+        <defs>
+          <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="orange" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="orange" stopOpacity={0.1} />
+          </linearGradient>
+        </defs>
+        <Area
+          dataKey="temp"
+          type="monotone"
+          stroke="orange"
+          fill="url(#colorPv)"
+        />
+        <YAxis />
+        <XAxis dataKey="name" />
+        <Tooltip content={renderTooltip} />
+        <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
+      </AreaChart>
     </div>
   );
 }
