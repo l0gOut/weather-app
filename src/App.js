@@ -1,23 +1,26 @@
 import {
   AreaChart,
   Area,
-  CartesianGrid,
   YAxis,
   XAxis,
   Tooltip,
+  LabelList,
+  ResponsiveContainer,
 } from "recharts";
 import { useState, useEffect } from "react";
 import { getWeather } from "./axios.js";
 
 function App() {
   const [nameCity, setNameCity] = useState("");
+  const [weather, setWeather] = useState([]);
+  const [currentWeather, setCurrentWeather] = useState([]);
 
   async function findCity(e) {
     e.preventDefault();
 
     getWeather({
       q: nameCity,
-    }).then(data => console.log(data));
+    }).then(data => setWeather(data.list));
   }
 
   useEffect(() => {
@@ -26,10 +29,23 @@ function App() {
         getWeather({
           lat: position.coords.latitude,
           lon: position.coords.longitude,
-        }).then(data => console.log(data));
+        }).then(data => setWeather(data.list));
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (weather.length > 0) {
+      const weatherList = [];
+      for (let i = 0; i <= 7; i++) {
+        weatherList.push({
+          name: weather[i].dt_txt.match(/[0-9][0-9]:00/),
+          temp: Math.round(weather[i].main.temp),
+        });
+      }
+      setCurrentWeather(weatherList);
+    }
+  }, [weather]);
 
   function renderTooltip(e) {
     const { payload, label } = e;
@@ -57,36 +73,33 @@ function App() {
         />
         <button type="submit">Найти</button>
       </form>
-      <AreaChart
-        width={1000}
-        height={300}
-        data={[
-          { name: "a", temp: 10 },
-          { name: "b", temp: 18 },
-          { name: "c", temp: 20 },
-          { name: "d", temp: 5 },
-          { name: "e", temp: 12 },
-          { name: "f", temp: 26 },
-          { name: "j", temp: 18 },
-        ]}
-      >
-        <defs>
-          <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="orange" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="orange" stopOpacity={0.1} />
-          </linearGradient>
-        </defs>
-        <Area
-          dataKey="temp"
-          type="monotone"
-          stroke="orange"
-          fill="url(#colorPv)"
-        />
-        <YAxis />
-        <XAxis dataKey="name" />
-        <Tooltip content={renderTooltip} />
-        <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
-      </AreaChart>
+      <ResponsiveContainer width="100%" height={300}>
+        <AreaChart data={currentWeather}>
+          <defs>
+            <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="orange" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="orange" stopOpacity={0.1} />
+            </linearGradient>
+          </defs>
+          <Area
+            isAnimationActive={false}
+            dataKey="temp"
+            type="monotone"
+            stroke="orange"
+            fill="url(#colorPv)"
+          >
+            <LabelList dataKey="temp" position="top" />
+          </Area>
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            ticks={[0, 8, 16, 24, 32, 40]}
+            tick={false}
+          />
+          <XAxis tickLine={false} axisLine={false} dataKey="name" />
+          <Tooltip content={renderTooltip} />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }
