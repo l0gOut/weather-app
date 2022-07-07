@@ -9,11 +9,13 @@ import {
 } from "recharts";
 import { useState, useEffect } from "react";
 import { getWeather } from "./axios.js";
+import "./App.scss";
 
 function App() {
-  const [nameCity, setNameCity] = useState("");
-  const [weather, setWeather] = useState([]);
   const [currentWeather, setCurrentWeather] = useState([]);
+  const [nameCity, setNameCity] = useState("");
+  const [dayIndex, setDayIndex] = useState(0);
+  const [weather, setWeather] = useState([]);
 
   async function findCity(e) {
     e.preventDefault();
@@ -97,9 +99,41 @@ function App() {
             tick={false}
           />
           <XAxis tickLine={false} axisLine={false} dataKey="name" />
-          <Tooltip content={renderTooltip} />
+          <Tooltip content={e => renderTooltip(e)} />
         </AreaChart>
       </ResponsiveContainer>
+      <div className="choose-day">
+        <div
+          className={`day ${dayIndex === 0 ? "active" : ""}`}
+          onClick={() => setDayIndex(0)}
+        >
+          Сегодня
+        </div>
+        <div
+          className={`day ${dayIndex === 1 ? "active" : ""}`}
+          onClick={() => setDayIndex(1)}
+        >
+          Завтра
+        </div>
+        <div
+          className={`day ${dayIndex === 2 ? "active" : ""}`}
+          onClick={() => setDayIndex(2)}
+        >
+          Послезавтра
+        </div>
+        <div
+          className={`day ${dayIndex === 3 ? "active" : ""}`}
+          onClick={() => setDayIndex(3)}
+        >
+          На 2 дня вперед
+        </div>
+        <div
+          className={`day ${dayIndex === 4 ? "active" : ""}`}
+          onClick={() => setDayIndex(4)}
+        >
+          На 3 дня вперед
+        </div>
+      </div>
     </div>
   );
 }
